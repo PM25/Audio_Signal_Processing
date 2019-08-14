@@ -114,9 +114,9 @@ class Offset_Detect:
         plt.ylim(top=np.max(spectral_flux) * 1.3)
 
 
-    # Convert audio frame to time 
+    # Convert audio frame to time
     def frames_to_time(self, frames):
-        return librosa.frames_to_time(frames, n_fft=self.N_FFT, sr=self.SR)
+        return librosa.frames_to_time(frames, n_fft=self.N_FFT, sr=self.SR, hop_length=self.HOP_LEN)
 
 
     # Show the plot graph
