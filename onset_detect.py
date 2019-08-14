@@ -47,7 +47,7 @@ class Onset_Detect:
     # Onset Detection
     def onset_detect(self, split_part=3):
         spectral_flux = self.n_spectral_flux(split_part)
-        peaks, _ = find_peaks(spectral_flux, height=1)
+        peaks, _ = find_peaks(spectral_flux, height=.9)
         on_sets = []
         for peak in peaks:
             for idx in range(peak, 0, -1):
@@ -104,6 +104,11 @@ class Onset_Detect:
         spectral_flux = self.n_spectral_flux(split_part)
         plt.plot(spectral_flux)
         plt.ylim(top=np.max(spectral_flux) * 1.3)
+
+
+    # Convert audio frame to time
+    def frames_to_time(self, frames):
+        return librosa.frames_to_time(frames, n_fft=self.N_FFT, sr=self.SR, hop_length=self.HOP_LEN)
 
 
     # Show the plot graph
