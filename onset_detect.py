@@ -58,18 +58,14 @@ class Onset_Detect:
         return on_sets
 
 
-    # Smooth function
-    def smooth(self, y, hann=15):
-        win = signal.hann(hann)
-        return signal.convolve(y, win, mode='same') / sum(win)
-
-
     # Draw vertical lines on the plot
-    def draw_vlines(self, frame, x='time', color='w'):
+    def draw_vlines(self, frames, x='time', color='w'):
         if(x == 'time'):
-            y = librosa.frames_to_time(frame, sr=self.SR, hop_length=self.HOP_LEN)
+            y = librosa.frames_to_time(frames, sr=self.SR, hop_length=self.HOP_LEN)
         elif(x == 'frame'):
-            y = frame
+            y = frames
+        else:
+           assert("Unknown value for parameter X")
 
         plt.vlines(y, 0, self.freqs[-1], colors=color, linestyles='--')
 
@@ -93,7 +89,6 @@ class Onset_Detect:
             Sdb_norm[Sdb_norm <= 0] = 0 # Wipe out noise
             spectral_flux += self.spectral_flux(Sdb_norm)
         spectral_flux /= split_part
-        spectral_flux = self.smooth(spectral_flux, 5)
         spectral_flux[spectral_flux < .1] = 0
 
         return spectral_flux
