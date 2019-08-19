@@ -35,11 +35,13 @@ class Onset_Detect:
 
     # Split Sdb into multiple part
     def split_sdb(self, split_part=3):
+        Sdb = self.Sdb.copy()
         part_size = math.ceil(len(self.freqs) / split_part)
+        
         sdb_list = []
         for idx in range(part_size, len(self.freqs), part_size):
-            sdb_list.append(self.Sdb[idx - part_size:idx])
-        sdb_list.append(self.Sdb[idx:])
+            sdb_list.append(Sdb[idx - part_size:idx])
+        sdb_list.append(Sdb[idx:])
 
         return sdb_list
 

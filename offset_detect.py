@@ -14,6 +14,7 @@ class Offset_Detect:
         self.HOP_LEN = hop_len
         self.S = np.abs(librosa.core.stft(y, n_fft=self.N_FFT, hop_length=self.HOP_LEN))
         self.Sdb = librosa.amplitude_to_db(self.S, ref=1.0)
+        self.avg_db = self.avg_db_timeline(self.Sdb)
         self.freqs = librosa.core.fft_frequencies(n_fft=n_fft)
 
 
@@ -35,11 +36,13 @@ class Offset_Detect:
 
     # Split Sdb into multiple part
     def split_sdb(self, split_part=3):
+        Sdb = self.Sdb.copy()
         part_size = math.ceil(len(self.freqs) / split_part)
+        
         sdb_list = []
         for idx in range(part_size, len(self.freqs), part_size):
-            sdb_list.append(self.Sdb[idx - part_size:idx])
-        sdb_list.append(self.Sdb[idx:])
+            sdb_list.append(Sdb[idx - part_size:idx])
+        sdb_list.append(Sdb[idx:])
 
         return sdb_list
 
@@ -58,17 +61,11 @@ class Offset_Detect:
 
             # Find Offset
             for idx in range(neg_flux_start, len(spectral_flux)):
-                if (spectral_flux[idx] == 0):
+                if (spectral_flux[idx] == 0 and self.avg_db[idx] < -30):
                     off_sets.append(idx)
                     break
 
         return off_sets
-
-
-    # Smooth function
-    def smooth(self, y, hann=15):
-        win = signal.hann(hann)
-        return signal.convolve(y, win, mode='same') / sum(win)
 
 
     # Draw vertical lines on the plot
@@ -101,10 +98,14 @@ class Offset_Detect:
             Sdb_norm[Sdb_norm <= 0] = 0 # Wipe out noise
             spectral_flux += self.spectral_flux(Sdb_norm)
         spectral_flux /= split_part
-        spectral_flux = self.smooth(spectral_flux, 10)
         spectral_flux[spectral_flux > -.1] = 0
 
         return spectral_flux
+    
+    
+    # Mean dB of all frequecy range vs Time
+    def avg_db_timeline(self, Sdb):
+        return [np.mean(Sdb[:, idx]) for idx in range(Sdb.shape[1])]
 
 
     # Draw spectral flux plot
