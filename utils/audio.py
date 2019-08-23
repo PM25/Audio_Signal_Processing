@@ -63,25 +63,24 @@ class Audio():
         peaks, _ = find_peaks(data, height=flux_threshold)
         start_end = []
         for peak in peaks:
+            start, end = None, None
             # Find start of the peaks
             for idx in range(peak, 0, -1):
                 if (data[idx] <= epsilon and self.avg_db[idx] <= db_threshold):
                     start = idx
                     break
-
             # Find Negative Flux
             for idx in range(peak, len(data)):
                 if (data[idx] < -epsilon):
                     neg_flux_start = idx
                     break
-
             # Find end of the peaks
             for idx in range(neg_flux_start, len(data)):
                 if (data[idx] <= epsilon and self.avg_db[idx] < db_threshold):
                     end = idx
                     break
-
-            start_end.append((start, end))
+            if(start != None and end != None):
+                start_end.append((start, end))
 
         return start_end
 
@@ -126,7 +125,8 @@ class Audio():
         part_x_std = np.std(part_x)
 
         x -= part_x_median
-        x /= part_x_std
+        if(part_x_std != 0):
+            x /= part_x_std
 
         return x
 
