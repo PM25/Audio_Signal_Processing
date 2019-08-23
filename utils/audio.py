@@ -1,10 +1,12 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import librosa.display
+from librosa import time_to_frames
+from scipy.signal import find_peaks
+import matplotlib.pyplot as plt
 import math
 
 
-class Audio:
+class Audio():
     def __init__(self, y, sr, n_fft, hop_len):
         self.y = y
         self.SR = sr
@@ -12,7 +14,81 @@ class Audio:
         self.HOP_LEN = hop_len
         self.S = np.abs(librosa.core.stft(y, n_fft=self.N_FFT, hop_length=self.HOP_LEN))
         self.Sdb = librosa.amplitude_to_db(self.S, ref=1.0)
+        self.avg_db = self.avg_db_timeline(self.Sdb)
         self.freqs = librosa.core.fft_frequencies(n_fft=n_fft)
+
+
+    # Onset & Offset Detection
+    def onset_offset_detect(self, flux_threshold=1, db_threshold=-20, seg_threshold=0.05, split_part=10, epsilon=.1):
+        potential_onsets_offsets = []
+
+        for Sdb in self.split_sdb(split_part):
+            clean_Sdb = self.remove_noise(Sdb)  # Wipe out background noise
+            spectral_flux = self.spectral_flux(clean_Sdb)  # Sum up the spectral flux
+            potential_onsets_offsets += self.find_start_end_peaks(spectral_flux, flux_threshold=flux_threshold, db_threshold=db_threshold, epsilon=epsilon)
+
+        onsets, offsets = [], []
+        for group in self.segmentation(potential_onsets_offsets, seg_threshold):
+            if (len(group) >= split_part / 2):
+                onset, offset = group[0]
+                onsets.append(onset)
+                offsets.append(offset)
+
+        return (onsets, offsets)
+
+
+    # Apply simple segmentation on 1D tuple(onset, offset) array
+    # threshold means how much difference below can be seen as same onsets or offsets
+    def segmentation(self, array, threshold):
+        threshold = time_to_frames(threshold, sr=self.SR, hop_length=self.HOP_LEN, n_fft=self.N_FFT)
+
+        results, group = [], []
+        for (begin, end) in sorted(array, key=lambda tup: tup[0]):
+            if (group == []):
+                group.append((begin, end))
+            else:
+                if (begin <= group[0][0] + threshold):
+                    group.append((begin, end))
+                else:
+                    results.append(group.copy())
+                    group.clear()
+                    group.append((begin, end))
+        results.append(group)
+
+        return results
+
+
+    # Find all the peaks by threshold, then find the beginning of it ( < epsilon)
+    def find_start_end_peaks(self, data, flux_threshold=1, db_threshold=-10, epsilon=.1):
+        peaks, _ = find_peaks(data, height=flux_threshold)
+        start_end = []
+        for peak in peaks:
+            # Find start of the peaks
+            for idx in range(peak, 0, -1):
+                if (data[idx] <= epsilon and self.avg_db[idx] <= db_threshold):
+                    start = idx
+                    break
+
+            # Find Negative Flux
+            for idx in range(peak, len(data)):
+                if (data[idx] < -epsilon):
+                    neg_flux_start = idx
+                    break
+
+            # Find end of the peaks
+            for idx in range(neg_flux_start, len(data)):
+                if (data[idx] <= epsilon and self.avg_db[idx] < db_threshold):
+                    end = idx
+                    break
+
+            start_end.append((start, end))
+
+        return start_end
+
+
+    # Sum the positive change in each frequency bin
+    def spectral_flux(self, Sdb):
+        return  np.mean(np.diff(Sdb, axis=1), axis=0)
 
 
     # Remove background noise
@@ -66,6 +142,11 @@ class Audio:
         sdb_list.append(Sdb[idx:])
 
         return sdb_list
+
+
+    # Mean dB of all frequecy range vs Time
+    def avg_db_timeline(self, Sdb):
+        return [np.mean(Sdb[:, idx]) for idx in range(Sdb.shape[1])]
 
 
     # Plot the Spectrogram

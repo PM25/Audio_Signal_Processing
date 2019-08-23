@@ -12,6 +12,3 @@
 <br>
 ### Onset & Offset Detection
 ![Onset & Offset](https://raw.githubusercontent.com/PM25/Audio_Signal_Processing/master/img/onset_offset.png)
-<br>
-### Spectral Flux (onset)
-![Spectral Flux](https://raw.githubusercontent.com/PM25/Audio_Signal_Processing/master/img/spectral_flux.png)
