@@ -91,7 +91,7 @@ class Audio():
 
 
     # Remove background noise
-    def remove_noise(self, Sdb, ratio=.5, split_part=100):
+    def remove_noise(self, Sdb, ratio=.7, split_part=100):
         part_size = math.ceil(Sdb.shape[1] / split_part)
         sdb_with_mean = []
         # Split Sdb into multiple part and get each part's mean dB.
@@ -120,12 +120,12 @@ class Audio():
 
     # Normalization only with part of the x
     def normalize_with_part(self, x, part_x):
-        part_x_median = np.median(part_x)
-        part_x -= part_x_median
+        part_x_mean = np.mean(part_x)
+        part_x -= part_x_mean
         part_x_std = np.std(part_x)
 
-        x -= part_x_median
-        if(part_x_std != 0):
+        x -= part_x_mean
+        if(part_x_std > 1):
             x /= part_x_std
 
         return x
