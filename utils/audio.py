@@ -41,6 +41,8 @@ class Audio():
     # threshold means how much difference below can be seen as same onsets or offsets
     def segmentation(self, array, threshold):
         threshold = time_to_frames(threshold, sr=self.SR, hop_length=self.HOP_LEN, n_fft=self.N_FFT)
+        if(threshold < 1):
+            threshold = 1
 
         results, group = [], []
         for (begin, end) in sorted(array, key=lambda tup: tup[0]):
