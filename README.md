@@ -32,8 +32,5 @@
 ### Graph 9: Final Result (Onset & Offset Detection)
 ![Onset & Offset](https://raw.githubusercontent.com/PM25/Audio_Signal_Processing/master/img/onset_offset.png)
 
-### Graph 10: Final Result (Onset & Offset Detection)
-![Onset & Offset](https://raw.githubusercontent.com/PM25/Audio_Signal_Processing/master/img/onset_offset.png)
-
-### Graph 11: Result in Critical Scenario
+### Graph 10: Result in Critical Scenario
 ![Result in Critical Scenario](https://raw.githubusercontent.com/PM25/Audio_Signal_Processing/master/img/result_in_critical_situation.png)
